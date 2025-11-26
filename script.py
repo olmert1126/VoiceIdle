@@ -9,7 +9,7 @@ import  os
 
 from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, \
-    QLabel, QFileDialog
+    QLabel, QFileDialog, QInputDialog
 from PyQt6.QtGui import QShortcut, QKeySequence, QPixmap
 from PyQt6.QtCore import Qt
 
@@ -585,23 +585,38 @@ class Idle(QMainWindow):
 
     def code(self):
         text = self.input_code.toPlainText()
-        self.save_code(f"{text}")
+        self.save_code(text)
         self.progress_bar()
+
         old_stdout = sys.stdout
         redirected_output = io.StringIO()
         sys.stdout = redirected_output
+
+        def gui_input(prompt=""):
+            text, ok = QInputDialog.getText(None, "Ввод", str(prompt))
+            if ok:
+                return text
+            else:
+                return ""
+
+        exec_globals = {
+            '__builtins__': {
+                **(__builtins__ if isinstance(__builtins__, dict) else vars(__builtins__)),
+                'input': gui_input,  # подменяем input
+            }
+        }
         try:
-            exec(text)
+            exec(text, exec_globals)
             output = redirected_output.getvalue()
             output_escaped = html.escape(output)
             self.out_code.setHtml(f'<pre>{output_escaped}</pre>')
-            # И вывод озвучен)
             self.tts.say(output_escaped)
+
         except Exception as e:
-            output = f"Ошибка: {e}"
-            self.out_code.setHtml(output)
-            # Ошибку озвучил)
-            self.tts.say(output)
+            error_msg = f"Ошибка: {e}"
+            self.out_code.setHtml(error_msg)
+            self.tts.say(error_msg)
+
         finally:
             sys.stdout = old_stdout
 
@@ -759,5 +774,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Idle()
     ex.show()
-
     sys.exit(app.exec())
