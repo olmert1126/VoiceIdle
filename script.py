@@ -5,7 +5,7 @@ import threading
 import sqlite3
 import re
 import html
-import  os
+import os
 
 from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, \
@@ -114,6 +114,7 @@ template = """<?xml version="1.0" encoding="UTF-8"?>
 </ui>
 """
 
+
 def resource_path(relative_path):
     """ Получить абсолютный путь к ресурсу (работает и в .py, и в .exe) """
     try:
@@ -122,6 +123,7 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
 
 class TextToSpeech:  # класс реализующий озвучку, игнорит текст пока недоозвучит прошлый
     def __init__(self):
@@ -209,6 +211,7 @@ class Idle(QMainWindow):
         self.shortcut_f1 = QShortcut(QKeySequence("F1"), self)
         self.shortcut_f6 = QShortcut(QKeySequence("F6"), self)
         self.shortcut_f4 = QShortcut(QKeySequence("F4"), self)
+        self.shortcut_f2 = QShortcut(QKeySequence("F2"), self)
 
         self.connect_key()
 
@@ -252,7 +255,7 @@ class Idle(QMainWindow):
                                     font-size: 14px; /* Размер шрифта */
                                     font-family: "Courier New", monospace; /* Хакерский моноширинный шрифт */
                                 }
-                                
+
                                 /* Стиль для нашего текстового поля */
                                 QPlainTextEdit {
                                     background-color: #3c3f41; /* Фон чуть светлее */
@@ -327,7 +330,7 @@ class Idle(QMainWindow):
                         font-family: "Courier New", monospace;
                         border-radius: 5px;
                     }
-                    
+
                     /* Стиль для текстового поля */
                     QPlainTextEdit {
                         background-color: #ffffff; /* Белый фон */
@@ -569,7 +572,6 @@ class Idle(QMainWindow):
         st_dark.triggered.connect(self.change_dark)
         st_yellow.triggered.connect(self.change_yellow)
 
-
     # Функция смены темы
     def change_light(self):
         # Переключаем на светлую тему
@@ -630,15 +632,20 @@ class Idle(QMainWindow):
         self.shortcut_f1.activated.connect(self.show_help)
         self.shortcut_f6.activated.connect(self.focus_input_code)  # добавь
         self.shortcut_f4.activated.connect(self.focus_cursor)  # добавь
+        self.shortcut_f2.activated.connect(self.voiceover_of_the_entire_line)
 
     def save_code(self, new_code):  # Сохранение кода
         with sqlite3.connect("codes.db") as con:
             cur = con.cursor()
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS code_store (
-                    code TEXT NOT NULL
-                )
-            """)
+                        CREATE TABLE IF NOT EXISTS code_store
+                        (
+                            code
+                            TEXT
+                            NOT
+                            NULL
+                        )
+                        """)
             cur.execute("DELETE FROM code_store")
             cur.execute("INSERT INTO code_store (code) VALUES (?)", (new_code,))
 
@@ -663,6 +670,7 @@ class Idle(QMainWindow):
         Также имеется клавиша f7 возвращающая прошлый введённый код.
         При нажатии на f6 ваш курсор переместиться в строку ввода.
         При нажатии на f4 озвучиться номер строки, а также в каком классе или в функции находиться курсор.
+        При нажатии на f2 будет озвучена вся строка на которойнаходиться курсор.
         Можете нажать кнопку help, чтобы повторно прослушать справку о программе.
         """
         self.tts.say(voice_text)
@@ -728,9 +736,16 @@ class Idle(QMainWindow):
 
         return None, None
 
+    def voiceover_of_the_entire_line(self):
+        cursor = self.input_code.textCursor()
+        line_number = cursor.blockNumber()
+        code = self.input_code.toPlainText().split("\n")
+        self.tts.say(code[line_number])
+
     def open_file(self):
         try:
-            file_name, _ = QFileDialog.getOpenFileName(self, "Открыть текст", "", "Python Files (*.py);;Text Files (*.txt);;All Files (*)")
+            file_name, _ = QFileDialog.getOpenFileName(self, "Открыть текст", "",
+                                                       "Python Files (*.py);;Text Files (*.txt);;All Files (*)")
             if file_name:  # Если выбрали файл
                 with open(file_name, 'r', encoding='utf-8') as file:  # 'r' — read, как чтение книги
                     text = file.read()
@@ -740,7 +755,8 @@ class Idle(QMainWindow):
 
     def save_file(self):
         # Диалог сохранения
-        file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить текст", "", "Python Files (*.py);;Text Files (*.txt);;All Files (*)")
+        file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить текст", "",
+                                                   "Python Files (*.py);;Text Files (*.txt);;All Files (*)")
         if file_name:
             text = self.input_code.toPlainText()  # Берём текст из браузера
             with open(file_name, 'w', encoding='utf-8') as file:  # 'w' — write, как запись в дневник
