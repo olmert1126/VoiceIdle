@@ -4,10 +4,12 @@ import pyttsx3
 import threading
 import sqlite3
 import re
+import html
+import os
 
 from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QDialog, QVBoxLayout, \
-    QLabel, QFileDialog
+    QLabel, QFileDialog, QInputDialog
 from PyQt6.QtGui import QShortcut, QKeySequence, QPixmap
 from PyQt6.QtCore import Qt
 
@@ -38,11 +40,6 @@ template = """<?xml version="1.0" encoding="UTF-8"?>
      <height>231</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
   </widget>
   <widget class="QPushButton" name="start_code">
    <property name="geometry">
@@ -71,11 +68,6 @@ template = """<?xml version="1.0" encoding="UTF-8"?>
      <height>391</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>12</pointsize>
-    </font>
-   </property>
   </widget>
   <widget class="QPushButton" name="help_btn">
    <property name="geometry">
@@ -95,6 +87,22 @@ template = """<?xml version="1.0" encoding="UTF-8"?>
     <string>help</string>
    </property>
   </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>820</x>
+     <y>40</y>
+     <width>331</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <number>1000</number>
+   </property>
+   <property name="value">
+    <number>0</number>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>input_code</tabstop>
@@ -105,6 +113,16 @@ template = """<?xml version="1.0" encoding="UTF-8"?>
  <connections/>
 </ui>
 """
+
+
+def resource_path(relative_path):
+    """ Получить абсолютный путь к ресурсу (работает и в .py, и в .exe) """
+    try:
+        # PyInstaller временная папка
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 
 class TextToSpeech:  # класс реализующий озвучку, игнорит текст пока недоозвучит прошлый
@@ -139,7 +157,7 @@ class TextToSpeech:  # класс реализующий озвучку, игн�
             self._lock.release()
 
 
-class NvdaDialog(QDialog):
+class FirstWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Предисловие")
@@ -152,7 +170,7 @@ class NvdaDialog(QDialog):
 
         # Изображение
         image_label = QLabel()
-        pixmap = QPixmap("logo.png")
+        pixmap = QPixmap(resource_path("logo.png"))
         if not pixmap.isNull():
             scaled = pixmap.scaledToWidth(
                 200,
@@ -193,10 +211,11 @@ class Idle(QMainWindow):
         self.shortcut_f1 = QShortcut(QKeySequence("F1"), self)
         self.shortcut_f6 = QShortcut(QKeySequence("F6"), self)
         self.shortcut_f4 = QShortcut(QKeySequence("F4"), self)
+        self.shortcut_f2 = QShortcut(QKeySequence("F2"), self)
 
         self.connect_key()
 
-        dialog = NvdaDialog(self)
+        dialog = FirstWindow(self)
         result = dialog.exec()
         self.have_nvda = (result == QDialog.DialogCode.Accepted)
 
@@ -223,7 +242,7 @@ class Idle(QMainWindow):
         st_yellow = sub_menu.addAction("Желтая")
         # Темная тема
         self.stylesheet_dark = """
-            /* Основной фон — тёмный, но не чёрный (меньше усталости глаз) */
+                                /* Основной фон — тёмный, но не чёрный (меньше усталости глаз) */
             QMainWindow {
                 background-color: #1e1e1e;
             }
@@ -338,7 +357,7 @@ class Idle(QMainWindow):
             QScrollBar::handle:vertical:hover {
                 background-color: #7a7a7a;
             }
-        """
+                            """
         # Светлая тема
         self.stylesheet_light = """
                     /* Стиль для всего главного окна */
@@ -603,53 +622,6 @@ class Idle(QMainWindow):
         st_dark.triggered.connect(self.change_dark)
         st_yellow.triggered.connect(self.change_yellow)
 
-    # Функция перевода основных ошибок
-    def translate_error_message(self, error_msg: str) -> str:
-        translations = {
-            r"can only concatenate str \(not \"(.*)\"\) to str": "можно объединять только строки, а не '{}' со строкой",
-            r"division by zero": "деление на ноль",
-            r"list index out of range": "индекс списка вне диапазона",
-            r"tuple index out of range": "индекс кортежа вне диапазона",
-            r"string index out of range": "индекс строки вне диапазона",
-            r"name '(.*)' is not defined": "имя '{}' не определено",
-            r"'(.*)' object is not callable": "объект '{}' не является вызываемым",
-            r"'(.*)' object has no attribute '(.*)'": "объект '{}' не имеет атрибута '{}'",
-            r"unexpected EOF while parsing": "неожиданный конец файла при разборе",
-            r"invalid syntax": "неверный синтаксис",
-            r"expected an indented block after '(.*)'": "ожидался отступ после '{}'",
-            r"unexpected indent": "неожиданный отступ",
-            r"unindent does not match any outer indentation level": "уровень отступа не соответствует внешнему блоку",
-            r"invalid literal for int\(\) with base 10: '(.*)'": "недопустимый литерал для int() с основанием 10: '{}'",
-            r"invalid literal for float\(\): '(.*)'": "недопустимый литерал для float(): '{}'",
-            r"maximum recursion depth exceeded": "превышена максимальная глубина рекурсии",
-            r"dictionary changed size during iteration": "размер словаря изменился во время итерации",
-            r"file not found": "файл не найден",
-            r"\[Errno 2\] No such file or directory: '(.*)'": "файл не найден: '{}'",
-            r"EOL while scanning string literal": "достигнут конец строки при чтении строкового литерала",
-            r"EOF while scanning triple-quoted string literal": "достигнут конец файла при чтении многострочной строки",
-            r"missing parentheses in call to '(.*)'": "пропущены скобки при вызове '{}'",
-            r"can't assign to literal": "нельзя присвоить значение литералу",
-            r"can't assign to function call": "нельзя присвоить значение вызову функции",
-            r"'(.*)' is not defined": "переменная '{}' не определена",
-            r"too many values to unpack \(expected (.*)\)": "слишком много значений для распаковки (ожидалось {})",
-            r"not enough values to unpack \(expected (.*)\)": "недостаточно значений для распаковки (ожидалось {})",
-            r"attempt to assign to subscripted .*": "попытка присвоить значение элементу, не поддерживающему запись",
-        }
-
-        import re
-        for pattern, translation in translations.items():
-            match = re.fullmatch(pattern, error_msg)
-            if match:
-                if '{}' in translation:
-                    # Подставляем захваченные группы или оригинал
-                    groups = match.groups()
-                    if groups:
-                        return translation.format(*groups)
-                    else:
-                        return translation.format(error_msg)
-                return translation
-        return error_msg
-
     # Функция смены темы
     def change_light(self):
         # Переключаем на светлую тему
@@ -665,24 +637,43 @@ class Idle(QMainWindow):
 
     def code(self):
         text = self.input_code.toPlainText()
-        self.save_code(f"{text}")
+        self.save_code(text)
+        self.progress_bar()
+
         old_stdout = sys.stdout
         redirected_output = io.StringIO()
         sys.stdout = redirected_output
+
+        def gui_input(prompt=""):
+            self.tts.say("окно ввода")
+            text, ok = QInputDialog.getText(None, "Ввод", str(prompt))
+            if ok:
+                return text
+            else:
+                return ""
+
+        exec_globals = {
+            '__builtins__': {
+                **(__builtins__ if isinstance(__builtins__, dict) else vars(__builtins__)),
+                'input': gui_input,  # подменяем input
+            }
+        }
         try:
-            exec(text)
+            exec(text, exec_globals)
             output = redirected_output.getvalue()
-            # И вывод озвучен)
-            self.tts.say(output)
+            output_escaped = html.escape(output)
+            self.out_code.setHtml(f'<pre>{output_escaped}</pre>')
+            self.tts.say(output_escaped)
+
         except Exception as e:
             error_msg = str(e)
             translated_msg = self.translate_error_message(error_msg)
             output = f"Ошибка: {translated_msg}"
+            self.out_code.setHtml(output)
             self.tts.say(output)
+
         finally:
             sys.stdout = old_stdout
-
-        self.out_code.setHtml(output)
 
     def connect_key(
             self):  # Сюда вписываешь все связи клавишь с функциями, в функцию для озвучки клавиатуры не добовляй использующиеся клавиши они озвучены
@@ -694,15 +685,20 @@ class Idle(QMainWindow):
         self.shortcut_f1.activated.connect(self.show_help)
         self.shortcut_f6.activated.connect(self.focus_input_code)  # добавь
         self.shortcut_f4.activated.connect(self.focus_cursor)  # добавь
+        self.shortcut_f2.activated.connect(self.voiceover_of_the_entire_line)
 
     def save_code(self, new_code):  # Сохранение кода
         with sqlite3.connect("codes.db") as con:
             cur = con.cursor()
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS code_store (
-                    code TEXT NOT NULL
-                )
-            """)
+                        CREATE TABLE IF NOT EXISTS code_store
+                        (
+                            code
+                            TEXT
+                            NOT
+                            NULL
+                        )
+                        """)
             cur.execute("DELETE FROM code_store")
             cur.execute("INSERT INTO code_store (code) VALUES (?)", (new_code,))
 
@@ -726,8 +722,9 @@ class Idle(QMainWindow):
         Введите код в верхнее поле, нажмите Start или F5 для выполнения.
         Также имеется клавиша f7 возвращающая прошлый введённый код.
         При нажатии на f6 ваш курсор переместиться в строку ввода.
-        При нажатии на f4 озвучиться номер строки а также в каком классе или в функции находиться курсор.
-        Можете нажать кнопку help или f1, чтобы повторно прослушать справку о программе.
+        При нажатии на f4 озвучиться номер строки, а также в каком классе или в функции находиться курсор.
+        При нажатии на f2 будет озвучена вся строка на которойнаходиться курсор.
+        Можете нажать кнопку help, чтобы повторно прослушать справку о программе.
         """
         self.tts.say(voice_text)
         self.out_code.setHtml(voice_text)
@@ -792,6 +789,12 @@ class Idle(QMainWindow):
 
         return None, None
 
+    def voiceover_of_the_entire_line(self):
+        cursor = self.input_code.textCursor()
+        line_number = cursor.blockNumber()
+        code = self.input_code.toPlainText().split("\n")
+        self.tts.say(code[line_number])
+
     def open_file(self):
         try:
             file_name, _ = QFileDialog.getOpenFileName(self, "Открыть текст", "",
@@ -829,6 +832,57 @@ class Idle(QMainWindow):
                     return True  # отмена стандартного enter
 
         return super().eventFilter(obj, event)
+
+    def progress_bar(self):
+        cursor = self.input_code.textCursor()
+        line_number = cursor.blockNumber() + 1
+        self.progressBar.setValue(line_number)
+
+    def translate_error_message(self, error_msg: str) -> str:
+        translations = {
+            r"can only concatenate str \(not \"(.*)\"\) to str": "можно объединять только строки, а не '{}' со строкой",
+            r"division by zero": "деление на ноль",
+            r"list index out of range": "индекс списка вне диапазона",
+            r"tuple index out of range": "индекс кортежа вне диапазона",
+            r"string index out of range": "индекс строки вне диапазона",
+            r"name '(.*)' is not defined": "имя '{}' не определено",
+            r"'(.*)' object is not callable": "объект '{}' не является вызываемым",
+            r"'(.*)' object has no attribute '(.*)'": "объект '{}' не имеет атрибута '{}'",
+            r"unexpected EOF while parsing": "неожиданный конец файла при разборе",
+            r"invalid syntax": "неверный синтаксис",
+            r"expected an indented block after '(.*)'": "ожидался отступ после '{}'",
+            r"unexpected indent": "неожиданный отступ",
+            r"unindent does not match any outer indentation level": "уровень отступа не соответствует внешнему блоку",
+            r"invalid literal for int\(\) with base 10: '(.*)'": "недопустимый литерал для int() с основанием 10: '{}'",
+            r"invalid literal for float\(\): '(.*)'": "недопустимый литерал для float(): '{}'",
+            r"maximum recursion depth exceeded": "превышена максимальная глубина рекурсии",
+            r"dictionary changed size during iteration": "размер словаря изменился во время итерации",
+            r"file not found": "файл не найден",
+            r"\[Errno 2\] No such file or directory: '(.*)'": "файл не найден: '{}'",
+            r"EOL while scanning string literal": "достигнут конец строки при чтении строкового литерала",
+            r"EOF while scanning triple-quoted string literal": "достигнут конец файла при чтении многострочной строки",
+            r"missing parentheses in call to '(.*)'": "пропущены скобки при вызове '{}'",
+            r"can't assign to literal": "нельзя присвоить значение литералу",
+            r"can't assign to function call": "нельзя присвоить значение вызову функции",
+            r"'(.*)' is not defined": "переменная '{}' не определена",
+            r"too many values to unpack \(expected (.*)\)": "слишком много значений для распаковки (ожидалось {})",
+            r"not enough values to unpack \(expected (.*)\)": "недостаточно значений для распаковки (ожидалось {})",
+            r"attempt to assign to subscripted .*": "попытка присвоить значение элементу, не поддерживающему запись",
+        }
+
+        import re
+        for pattern, translation in translations.items():
+            match = re.fullmatch(pattern, error_msg)
+            if match:
+                if '{}' in translation:
+                    # Подставляем захваченные группы или оригинал
+                    groups = match.groups()
+                    if groups:
+                        return translation.format(*groups)
+                    else:
+                        return translation.format(error_msg)
+                return translation
+        return error_msg
 
 
 if __name__ == '__main__':
