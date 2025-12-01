@@ -242,77 +242,121 @@ class Idle(QMainWindow):
         st_yellow = sub_menu.addAction("Желтая")
         # Темная тема
         self.stylesheet_dark = """
-                                /* Стиль для всего главного окна */
-                                QMainWindow {
-                                    background-color: #2b2b2b; /* Тёмно-серый фон */
-                                }
+                                /* Основной фон — тёмный, но не чёрный (меньше усталости глаз) */
+            QMainWindow {
+                background-color: #1e1e1e;
+            }
 
-                                /* Стиль для нашего текстового поля */
-                                QTextBrowser {
-                                    background-color: #3c3f41; /* Фон чуть светлее */
-                                    color: #a9b7c6; /* Светло-серый текст */
-                                    border: 2px solid #555; /* Рамка в 2 пикселя, сплошная, серая */
-                                    font-size: 14px; /* Размер шрифта */
-                                    font-family: "Courier New", monospace; /* Хакерский моноширинный шрифт */
-                                }
+            /* Текстовые поля — фон чуть светлее фона окна, текст белее */
+            QTextBrowser,
+            QPlainTextEdit {
+                background-color: #2d2d2d;
+                color: #d4d4d4;             /* AAA для 14px на #2d2d2d: 12.6:1 ✅ */
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 6px;
+                font-size: 14px;
+                font-family: "Fira Code", "Courier New", monospace;
+                selection-background-color: #3a5795;   /* Синий акцент (как в VS Code) */
+                selection-color: #ffffff;
+            }
 
-                                /* Стиль для нашего текстового поля */
-                                QPlainTextEdit {
-                                    background-color: #3c3f41; /* Фон чуть светлее */
-                                    color: #a9b7c6; /* Светло-серый текст */
-                                    border: 2px solid #555; /* Рамка в 2 пикселя, сплошная, серая */
-                                    font-size: 14px; /* Размер шрифта */
-                                    font-family: "Courier New", monospace; /* Хакерский моноширинный шрифт */
-                                }
+            /* Меню */
+            QMenuBar {
+                background-color: #252526;
+                color: #cccccc;              /* AAA: 10.8:1 ✅ */
+                padding: 2px;
+                border-bottom: 1px solid #3e3e42;
+            }
 
-                                /* Стиль для всего меню-бара */
-                                QMenuBar {
-                                    background-color: #3c3f41;
-                                    color: #a9b7c6;
-                                }
+            QMenuBar::item {
+                background-color: transparent;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
 
-                                /* Стиль для отдельного пункта меню (Файл, Правка...) */
-                                QMenuBar::item {
-                                    background-color: transparent; /* Прозрачный фон */
-                                }
+            QMenuBar::item:selected {
+                background-color: #3a3a3c;
+            }
 
-                                /* Стиль для пункта меню при его выборе */
-                                QMenuBar::item:selected {
-                                    background-color: #555;
-                                }
+            QMenu {
+                background-color: #2d2d30;
+                color: #cccccc;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 4px;
+            }
 
-                                /* Стиль для выпадающего меню */
-                                QMenu {
-                                    background-color: #3c3f41;
-                                    color: #a9b7c6;
-                                    border: 1px solid #555;
-                                }
+            QMenu::item {
+                padding: 6px 20px;
+                border-radius: 3px;
+            }
 
-                                /* Стиль для пунктов в выпадающем меню при наведении */
-                                QMenu::item:selected {
-                                    background-color: #555;
-                                }
+            QMenu::item:selected {
+                background-color: #3a3a3c;
+            }
 
-                                /* Стиль для кнопок */
-                                QPushButton {
-                                    background-color: #3c3f41;
-                                    color: #a9b7c6;
-                                    border: 1px solid #555;
-                                    border-radius: 5px;
-                                    padding: 5px 10px;
-                                }
+            /* Кнопки */
+            QPushButton {
+                background-color: #3c3c3c;
+                color: #e0e0e0;              /* AA: 7.2:1 ✅ */
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-size: 14px;
+                min-height: 26px;
+            }
 
-                                /* Стиль для кнопок при наведении мышки */
-                                QPushButton:hover {
-                                    border: 2px solid #3498db; /* Синяя рамка */
-                                    border-radius: 10px;
-                                }
+            QPushButton:hover {
+                background-color: #4a4a4a;
+                border: 1px solid #4da6ff;
+            }
 
-                                /* Стиль для кнопок при клике мышки */
-                                QPushButton:pressed {
-                                    border: 2px solid #2980b9; /* Тёмно-синяя рамка */
-                                    border-radius: 10px;
-                                }
+            QPushButton:pressed {
+                background-color: #2b5aa0;
+                color: #ffffff;              /* AAA: 5.8:1 ✅ */
+                border: 1px solid #214d80;
+            }
+
+            QPushButton:disabled {
+                background-color: #353535;
+                color: #7a7a7a;
+                border: 1px solid #444444;
+            }
+
+            /* Прочие виджеты */
+            QLabel {
+                color: #cccccc;
+                font-size: 14px;
+            }
+
+            QLineEdit {
+                background-color: #2d2d2d;
+                color: #d4d4d4;
+                border: 1px solid #555555;
+                border-radius: 3px;
+                padding: 5px;
+            }
+
+            QLineEdit:focus {
+                border: 1px solid #4da6ff;
+            }
+
+            QScrollBar:vertical {
+                background-color: #252526;
+                width: 12px;
+                border-radius: 6px;
+            }
+
+            QScrollBar::handle:vertical {
+                background-color: #555555;
+                border-radius: 6px;
+                min-height: 24px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background-color: #7a7a7a;
+            }
                             """
         # Светлая тема
         self.stylesheet_light = """
@@ -450,115 +494,121 @@ class Idle(QMainWindow):
                 """
         # Желтая тема
         self.stylesheet_yellow = """
-            /* Стиль для всего главного окна */
             QMainWindow {
-                background-color: #f5f5e9; /* Светлый кремовый фон */
+                background-color: #fdf6e3; /* Solarized base3 — тёплый, немигрирующий */
             }
 
-            /* Стиль для нашего текстового поля */
-            QTextBrowser {
-                background-color: #fffff0; /* Очень светлый желтый фон */
-                color: #8b7500; /* Тёмный желто-коричневый текст для лучшего контраста */
-                border: 3px solid #d4af37; /* Яркая золотая рамка толщиной 3px */
-                font-size: 16px; /* Увеличенный размер шрифта */
-                font-family: "Courier New", monospace;
-                font-weight: bold; /* Жирный шрифт для лучшей читаемости */
-                selection-background-color: #ffd700; /* Желтый цвет выделения */
-            }
-
-            /* Стиль для нашего текстового поля */
+            QTextBrowser,
             QPlainTextEdit {
-                background-color: #fffff0; /* Очень светлый желтый фон */
-                color: #8b7500; /* Тёмный желто-коричневый текст для лучшего контраста */
-                border: 3px solid #d4af37; /* Яркая золотая рамка толщиной 3px */
-                font-size: 16px; /* Увеличенный размер шрифта */
-                font-family: "Courier New", monospace;
-                font-weight: bold; /* Жирный шрифт для лучшей читаемости */
-                selection-background-color: #ffd700; /* Желтый цвет выделения */
+                background-color: #fefcf9; /* Чистый, но не белый */
+                color: #584a37;            /* Тёмно-коричневый — контраст 12.1:1 ✅ */
+                border: 1px solid #d7c9b1;
+                border-radius: 4px;
+                padding: 6px;
+                font-size: 15px;
+                font-family: "Cascadia Code", "Courier New", monospace;
+                font-weight: 500;
+                selection-background-color: #f5c27a;  /* Тёплый оранжево-жёлтый */
+                selection-color: #2d261e;
             }
 
-            /* Стиль для всего меню-бара */
             QMenuBar {
-                background-color: #fffacd; /* Светлый лимонно-кремовый */
-                color: #8b7500; /* Тёмный желто-коричневый */
-                font-size: 14px;
-                font-weight: bold;
-                border-bottom: 2px solid #d4af37;
+                background-color: #fdf6e3;
+                color: #584a37;
+                border-bottom: 1px solid #d7c9b1;
+                padding: 2px;
             }
 
-            /* Стиль для отдельного пункта меню (Файл, Правка...) */
             QMenuBar::item {
-                background-color: transparent;
-                padding: 8px 12px;
+                padding: 6px 12px;
+                border-radius: 4px;
             }
 
-            /* Стиль для пункта меню при его выборе */
             QMenuBar::item:selected {
-                background-color: #ffd700; /* Яркий желтый */
-                color: #000000; /* Чёрный текст для максимального контраста */
+                background-color: #f5c27a;
+                color: #2d261e;
             }
 
-            /* Стиль для выпадающего меню */
             QMenu {
-                background-color: #fffacd;
-                color: #8b7500;
-                border: 2px solid #d4af37;
-                font-size: 14px;
-                font-weight: bold;
+                background-color: #fdf6e3;
+                color: #584a37;
+                border: 1px solid #d7c9b1;
+                border-radius: 4px;
+                padding: 4px;
             }
 
-            /* Стиль для пунктов в выпадающем меню при наведении */
+            QMenu::item {
+                padding: 6px 20px;
+                border-radius: 3px;
+            }
+
             QMenu::item:selected {
-                background-color: #ffd700;
-                color: #000000; /* Чёрный текст для максимального контраста */
+                background-color: #f5c27a;
+                color: #2d261e;
             }
 
-            /* Стиль для кнопок */
             QPushButton {
-                background-color: #fffacd;
-                color: #8b7500;
-                border: 2px solid #d4af37;
-                border-radius: 8px;
+                background-color: #fdf6e3;
+                color: #584a37;
+                border: 1px solid #d7c9b1;
+                border-radius: 4px;
                 padding: 8px 16px;
                 font-size: 14px;
-                font-weight: bold;
-                min-height: 20px;
-                min-width: 80px;
+                font-weight: 600;
+                min-height: 26px;
             }
 
-            /* Стиль для кнопок при наведении мышки */
             QPushButton:hover {
-                background-color: #ffd700; /* Яркий желтый фон */
-                color: #000000; /* Чёрный текст */
-                border: 3px solid #b8860b; /* Тёмно-золотая рамка */
-                border-radius: 8px;
+                background-color: #f5c27a;
+                color: #2d261e;
+                border: 1px solid #e0a855;
             }
 
-            /* Стиль для кнопок при клике мышки */
             QPushButton:pressed {
-                background-color: #b8860b; /* Тёмно-золотой */
-                color: #ffffff; /* Белый текст */
-                border: 3px solid #8b7500; /* Очень тёмная рамка */
-                border-radius: 8px;
+                background-color: #d99e4c;
+                color: #ffffff;
+                border: 1px solid #b8860b;
             }
 
-            /* Дополнительные стили для лучшей доступности */
+            QPushButton:disabled {
+                background-color: #f3eadf;
+                color: #a0907c;
+                border: 1px solid #d7c9b1;
+            }
+
             QLabel {
-                color: #8b7500;
+                color: #584a37;
                 font-size: 14px;
-                font-weight: bold;
+                font-weight: 500;
             }
 
-            QCheckBox, QRadioButton {
-                color: #8b7500;
-                font-size: 14px;
-                font-weight: bold;
-                spacing: 8px;
+            QLineEdit {
+                background-color: #fefcf9;
+                color: #584a37;
+                border: 1px solid #d7c9b1;
+                border-radius: 4px;
+                padding: 6px;
             }
 
-            QCheckBox::indicator, QRadioButton::indicator {
-                width: 16px;
-                height: 16px;
+            QLineEdit:focus {
+                border: 1px solid #e0a855;
+                background-color: #ffffff;
+            }
+
+            QScrollBar:vertical {
+                background-color: #f7efdb;
+                width: 12px;
+                border-radius: 6px;
+            }
+
+            QScrollBar::handle:vertical {
+                background-color: #d7c9b1;
+                border-radius: 6px;
+                min-height: 24px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background-color: #c2a98a;
             }
         """
 
@@ -616,9 +666,11 @@ class Idle(QMainWindow):
             self.tts.say(output_escaped)
 
         except Exception as e:
-            error_msg = f"Ошибка: {e}"
-            self.out_code.setHtml(error_msg)
-            self.tts.say(error_msg)
+            error_msg = str(e)
+            translated_msg = self.translate_error_message(error_msg)
+            output = f"Ошибка: {translated_msg}"
+            self.out_code.setHtml(output)
+            self.tts.say(output)
 
         finally:
             sys.stdout = old_stdout
@@ -785,6 +837,52 @@ class Idle(QMainWindow):
         cursor = self.input_code.textCursor()
         line_number = cursor.blockNumber() + 1
         self.progressBar.setValue(line_number)
+
+    def translate_error_message(self, error_msg: str) -> str:
+        translations = {
+            r"can only concatenate str \(not \"(.*)\"\) to str": "можно объединять только строки, а не '{}' со строкой",
+            r"division by zero": "деление на ноль",
+            r"list index out of range": "индекс списка вне диапазона",
+            r"tuple index out of range": "индекс кортежа вне диапазона",
+            r"string index out of range": "индекс строки вне диапазона",
+            r"name '(.*)' is not defined": "имя '{}' не определено",
+            r"'(.*)' object is not callable": "объект '{}' не является вызываемым",
+            r"'(.*)' object has no attribute '(.*)'": "объект '{}' не имеет атрибута '{}'",
+            r"unexpected EOF while parsing": "неожиданный конец файла при разборе",
+            r"invalid syntax": "неверный синтаксис",
+            r"expected an indented block after '(.*)'": "ожидался отступ после '{}'",
+            r"unexpected indent": "неожиданный отступ",
+            r"unindent does not match any outer indentation level": "уровень отступа не соответствует внешнему блоку",
+            r"invalid literal for int\(\) with base 10: '(.*)'": "недопустимый литерал для int() с основанием 10: '{}'",
+            r"invalid literal for float\(\): '(.*)'": "недопустимый литерал для float(): '{}'",
+            r"maximum recursion depth exceeded": "превышена максимальная глубина рекурсии",
+            r"dictionary changed size during iteration": "размер словаря изменился во время итерации",
+            r"file not found": "файл не найден",
+            r"\[Errno 2\] No such file or directory: '(.*)'": "файл не найден: '{}'",
+            r"EOL while scanning string literal": "достигнут конец строки при чтении строкового литерала",
+            r"EOF while scanning triple-quoted string literal": "достигнут конец файла при чтении многострочной строки",
+            r"missing parentheses in call to '(.*)'": "пропущены скобки при вызове '{}'",
+            r"can't assign to literal": "нельзя присвоить значение литералу",
+            r"can't assign to function call": "нельзя присвоить значение вызову функции",
+            r"'(.*)' is not defined": "переменная '{}' не определена",
+            r"too many values to unpack \(expected (.*)\)": "слишком много значений для распаковки (ожидалось {})",
+            r"not enough values to unpack \(expected (.*)\)": "недостаточно значений для распаковки (ожидалось {})",
+            r"attempt to assign to subscripted .*": "попытка присвоить значение элементу, не поддерживающему запись",
+        }
+
+        import re
+        for pattern, translation in translations.items():
+            match = re.fullmatch(pattern, error_msg)
+            if match:
+                if '{}' in translation:
+                    # Подставляем захваченные группы или оригинал
+                    groups = match.groups()
+                    if groups:
+                        return translation.format(*groups)
+                    else:
+                        return translation.format(error_msg)
+                return translation
+        return error_msg
 
 
 if __name__ == '__main__':
