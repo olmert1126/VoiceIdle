@@ -645,7 +645,10 @@ class Idle(QMainWindow):
         sys.stdout = redirected_output
 
         def gui_input(prompt=""):
-            self.tts.say("окно ввода")
+            if prompt != "":
+                self.tts.say(str(prompt))
+            else:
+                self.tts.say("окно ввода")
             text, ok = QInputDialog.getText(None, "Ввод", str(prompt))
             if ok:
                 self.tts.say(text)
