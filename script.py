@@ -648,6 +648,7 @@ class Idle(QMainWindow):
             self.tts.say("окно ввода")
             text, ok = QInputDialog.getText(None, "Ввод", str(prompt))
             if ok:
+                self.tts.say(text)
                 return text
             else:
                 return ""
